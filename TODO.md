@@ -12,7 +12,9 @@
 - [X] Press s to sell aglet inventory
     - [X] add `aglet inventory` to $
     - [X] set `aglet inventory` to 0
-- [ ] Limit key repeat rate?
+- [ ] Re-write on the web so I can share with Gabe and others.
+- [ ] Auto-save to local storage.
+- [ ] Load from local storage.
 - [ ] Purchase minebot
     - [ ] Show minebot count
     - [ ] Show minebot rate (start at 1)
