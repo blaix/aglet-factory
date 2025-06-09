@@ -1,0 +1,29 @@
+- [X] Show aglet ore
+- [X] Show aglet inventory
+- [X] Show $ (start at 0)
+- [X] Show efficiency (start at 1)
+- [X] Show mining rate (start at 1)
+- [X] Show assembly rate (start at 1)
+- [X] Press m to mine aglet ore
+    - [X] add `mining rate` to aglet inventory
+- [X] Press a to assemble an aglet
+    - [X] add `assembly rate` to aglet inventory
+    - [X] deduct `assembly rate / efficiency` from ore
+- [X] Press s to sell aglet inventory
+    - [X] add `aglet inventory` to $
+    - [X] set `aglet inventory` to 0
+- [ ] Limit key repeat rate?
+- [ ] Purchase minebot
+    - [ ] Show minebot count
+    - [ ] Show minebot rate (start at 1)
+    - [ ] add `(mining rate * minebot rate) / seconds since last tick`
+- [ ] Purchase assemblybot
+    - [ ] Show assemblybot count
+    - [ ] Show assemblybot rate (start at 1)
+    - [ ] add `(assembly rate * assemblybot rate) / seconds since last tick`
+- [ ] Some way to increase effiency (by 0.1 to start). Purchase assembly training?
+
+Future ideas:
+- [ ] Visual silos for ore and aglets
+- [ ] Max out silos. Purchase bigger silos.
+- [ ] Purchase salesman: Auto-sell aglets when silo full.

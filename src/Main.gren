@@ -1,0 +1,223 @@
+module Main exposing (main)
+
+
+import Ansi
+import Bytes exposing (Bytes)
+import Init
+import Math
+import Node
+import Stream
+import Task
+import Tui
+import UI
+import UI.Attribute as Attr
+import UI.Border as Border
+
+
+main : Tui.Program Model Msg
+main =
+    Tui.defineProgram
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        , onInput = GotInput
+        }
+
+
+type alias Model =
+    { stdout : Stream.Writable Bytes
+    , money : Float
+    , agletPrice : Float
+    , aglets : Float
+    , ore : Float
+    , efficiency : Float
+    , miningRate : Float
+    , assemblyRate : Float
+    }
+
+
+init : Tui.Environment -> Init.Task { model : Model, command : Cmd Msg }
+init env =
+    Node.startProgram
+        { model = 
+            { stdout = env.stdout
+            , agletPrice = 1
+            , aglets = 0
+            , ore = 0
+            , money = 0
+            , efficiency = 1
+            , miningRate = 1
+            , assemblyRate = 1
+            }
+        , command = 
+            Tui.hideCursor env.stdout
+                |> Task.execute
+        }
+
+
+-- UPDATE
+
+
+type Msg
+    = GotInput Tui.Input
+
+
+update : Msg -> Model -> { model : Model, command : Cmd Msg }
+update msg model =
+    when msg is
+        GotInput input ->
+            when input is
+                Tui.Escape ->
+                    { model = model
+                    , command = 
+                        Tui.exit model.stdout
+                            |> Task.execute
+                    }
+
+                Tui.KeyChar "m" ->
+                    { model = mine model
+                    , command = Cmd.none
+                    }
+
+                Tui.KeyChar "a" ->
+                    { model = assemble model
+                    , command = Cmd.none
+                    }
+
+                Tui.KeyChar "s" ->
+                    { model = sell model
+                    , command = Cmd.none
+                    }
+
+                _ ->
+                    { model = model
+                    , command = 
+                        Cmd.none
+                    }
+
+
+mine : Model -> Model
+mine model =
+    { model
+        | ore = model.ore + model.miningRate
+    }
+
+
+assemble : Model -> Model
+assemble model =
+    let
+        oreUsed =
+            model.assemblyRate / model.efficiency
+    in
+    if model.ore >= oreUsed then
+        { model
+            | ore = model.ore - oreUsed
+            , aglets = model.aglets + model.assemblyRate
+        }
+    else
+        model
+
+
+sell : Model -> Model
+sell model =
+    { model
+        | money = model.money + (model.agletPrice * model.aglets)
+        , aglets = 0
+    }
+
+
+-- VIEW
+
+
+view : Model -> UI.Element
+view model =
+    UI.column []
+        [ UI.row []
+            [ viewInventory model
+            , viewStats model
+            ]
+        , viewMenu
+        ]
+
+viewInventory : Model -> UI.Element
+viewInventory model =
+    UI.bordered [] Border.rounded <|
+        UI.row []
+            [ UI.column []
+                [ UI.text [] "     $: "
+                , UI.text [] "   Ore: "
+                , UI.text [] "Aglets: "
+                ]
+            , UI.column []
+                [ UI.text [] (formatForInventory model.money)
+                , UI.text [] (formatForInventory model.ore)
+                , UI.text [] (formatForInventory model.aglets)
+                ]
+            ]
+
+formatForInventory : Float -> String
+formatForInventory inventory =
+    let
+        parts =
+            inventory
+                |> String.fromFloat
+                |> String.split "."
+
+        whole =
+            Array.get 0 parts
+                |> Maybe.withDefault "0"
+
+        decimal =
+            Array.get 1 parts
+                |> Maybe.withDefault "00"
+                |> String.takeFirst 2
+                |> String.padRight 2 '0'
+    in
+    whole ++ "." ++ decimal
+        |> String.padRight 20 ' '
+
+
+viewStats : Model -> UI.Element
+viewStats model =
+    UI.bordered [] Border.hidden <|
+        UI.column []
+            [ UI.row []
+                [ UI.text [] "Efficiency: "
+                , UI.text [] (String.fromFloat model.efficiency)
+                ]
+            , UI.row []
+                [ UI.text [] "Mining Rate: "
+                , UI.text [] (String.fromFloat model.miningRate)
+                ]
+            , UI.row []
+                [ UI.text [] "Assembly Rate: "
+                , UI.text [] (String.fromFloat model.assemblyRate)
+                ]
+            ]
+
+
+viewMenu : UI.Element
+viewMenu =
+    UI.row []
+        [ viewMenuItem "m" "ine"
+        , viewMenuItem "a" "ssemble"
+        , viewMenuItem "s" "ell"
+        ]
+
+
+viewMenuItem : String -> String -> UI.Element
+viewMenuItem trigger remaining =
+    UI.row []
+        [ UI.text [] "["
+        , UI.text [ Attr.color Ansi.Yellow ] trigger
+        , UI.text [] ("]" ++ remaining ++ "  ")
+        ]
+
+
+-- SUBS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
